@@ -10,10 +10,7 @@ use std::{
 
 use ethers::{
     providers::{Http, HttpRateLimitRetryPolicy, Middleware, Provider, RetryClient},
-    types::Log,
-};
-use ethers::{
-    types::{Address, Block, BlockNumber, Filter, Transaction, H256, U256},
+    types::{Address, Block, BlockNumber, Filter, Log, Transaction, H256, U256, U64},
     utils::keccak256,
 };
 
@@ -25,6 +22,10 @@ use crate::{
     config::{Config, SystemConfig},
     derive::stages::attributes::UserDeposited,
 };
+
+use self::abi::{L2OutputOracle, OptimismPortal};
+
+mod abi;
 
 /// Handles watching the L1 chain and monitoring for new blocks, deposits,
 /// and batcher transactions. The monitoring loop is spawned in a seperate
@@ -176,10 +177,7 @@ impl InnerWatcher {
         l1_start_block: u64,
         l2_start_block: u64,
     ) -> Self {
-        let http = Http::from_str(&config.l1_rpc_url).expect("invalid L1 RPC URL");
-        let policy = Box::new(HttpRateLimitRetryPolicy);
-        let client = RetryClient::new(http, policy, 100, 50);
-        let provider = Arc::new(Provider::new(client));
+        let provider = generate_http_provider(&config.l1_rpc_url);
 
         let system_config = if l2_start_block == config.chain.l2_genesis.number {
             config.chain.system_config
@@ -552,4 +550,53 @@ impl TryFrom<Log> for SystemConfigUpdate {
             _ => Err(eyre::eyre!("invalid system config update")),
         }
     }
+}
+
+pub struct L1ContractsBinding<T> {
+    optimism_portal: OptimismPortal<T>,
+    l2_output_oracle: L2OutputOracle<T>,
+}
+
+impl L1ContractsBinding<Provider<RetryClient<Http>>> {
+    pub async fn from_rpc_url(url: &str) -> Result<Self> {
+        let provider = generate_http_provider(url);
+
+        // todo: get this from chain config, this is eth goerli
+        let portal_address = Address::from_str("0xa24A444C6ceeb1d4Fc19D1B78913C22B9d03BbC9")?;
+        let optimism_portal = OptimismPortal::new(portal_address, provider.clone());
+
+        let l2_output_oracle_address = optimism_portal.l2_oracle().call().await?;
+        let l2_output_oracle = L2OutputOracle::new(l2_output_oracle_address, provider);
+
+        Ok(Self {
+            optimism_portal,
+            l2_output_oracle,
+        })
+    }
+
+    pub async fn get_latest_l2_output(&self, block: &Block<Transaction>) -> Result<()> {
+        let block_number = block
+            .number
+            .ok_or(eyre::eyre!("block number not included"))?
+            .as_u64();
+
+        let block_hash = block.hash.ok_or(eyre::eyre!("block hash not included"))?;
+
+        let l2_output_index = 123.into();
+        let l2_output = self
+            .l2_output_oracle
+            .get_l2_output(l2_output_index)
+            .call()
+            .await?;
+
+        Ok(())
+    }
+}
+
+fn generate_http_provider(url: &str) -> Arc<Provider<RetryClient<Http>>> {
+    let http = Http::from_str(url).expect("invalid RPC URL provided.");
+    let policy = Box::new(HttpRateLimitRetryPolicy);
+    let client = RetryClient::new(http, policy, 100, 50);
+
+    Arc::new(Provider::new(client))
 }

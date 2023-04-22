@@ -19,6 +19,8 @@ pub enum SyncMode {
     Challenge,
     /// Full sync mode
     Full,
+    /// Checkpoint sync mode
+    Checkpoint(H256),
 }
 
 impl FromStr for SyncMode {
@@ -29,6 +31,7 @@ impl FromStr for SyncMode {
             "fast" => Ok(Self::Fast),
             "challenge" => Ok(Self::Challenge),
             "full" => Ok(Self::Full),
+            "checkpoint" => Ok(Self::Checkpoint(H256::zero())),
             _ => Err("invalid sync mode".to_string()),
         }
     }
@@ -37,6 +40,8 @@ impl FromStr for SyncMode {
 /// A system configuration
 #[derive(Debug, Clone, Deserialize)]
 pub struct Config {
+    /// The node sync strategy
+    pub sync_mode: SyncMode,
     /// The base chain RPC URL
     pub l1_rpc_url: String,
     /// The L2 engine RPC URL

@@ -240,7 +240,7 @@ impl From<PendingChannel> for Channel {
 #[cfg(test)]
 mod tests {
     use crate::{
-        config::{ChainConfig, Config},
+        config::{ChainConfig, Config, SyncMode},
         derive::stages::batcher_transactions::{
             BatcherTransactionMessage, BatcherTransactions, Frame,
         },
@@ -392,6 +392,7 @@ mod tests {
         mpsc::Sender<BatcherTransactionMessage>,
     ) {
         let config = Config {
+            sync_mode: SyncMode::Full,
             l1_rpc_url: String::new(),
             l2_rpc_url: String::new(),
             data_dir: PathBuf::new(),

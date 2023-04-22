@@ -43,6 +43,15 @@ impl From<BlockInfo> for Value {
     }
 }
 
+impl From<H256> for BlockInfo {
+    fn from(hash: H256) -> Self {
+        BlockInfo {
+            hash,
+            ..Default::default()
+        }
+    }
+}
+
 impl<T> TryFrom<Block<T>> for BlockInfo {
     type Error = eyre::Report;
 

@@ -14,7 +14,6 @@ use serde::Serialize;
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
-    let sync_mode = cli.sync_mode.clone();
     let verbose = cli.verbose;
     let logs_dir = cli.logs_dir.clone();
     let logs_rotation = cli.logs_rotation.clone();
@@ -23,16 +22,16 @@ async fn main() -> Result<()> {
     let _guards = telemetry::init(verbose, logs_dir, logs_rotation);
     metrics::init()?;
 
-    match sync_mode {
-        SyncMode::Fast => panic!("fast sync not implemented"),
-        SyncMode::Full => full_sync(config).await?,
-        SyncMode::Challenge => panic!("challenge sync not implemented"),
-    };
+    if let SyncMode::Challenge = config.sync_mode {
+        panic!("challenge sync not implemented yet");
+    }
+
+    run_sync(config).await?;
 
     Ok(())
 }
 
-pub async fn full_sync(config: Config) -> Result<()> {
+pub async fn run_sync(config: Config) -> Result<()> {
     tracing::info!(target: "magi", "starting full sync");
     let (shutdown_sender, shutdown_recv) = channel();
 

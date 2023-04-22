@@ -89,7 +89,7 @@ mod tests {
 
     use crate::{
         common::RawTransaction,
-        config::{ChainConfig, Config},
+        config::{ChainConfig, Config, SyncMode},
         derive::*,
         l1::{BlockUpdate, ChainWatcher},
     };
@@ -100,6 +100,7 @@ mod tests {
         let l2_rpc = "https://opt-goerli.g.alchemy.com/v2/Olu7jiUDhtHf1iWldKzbBXGB6ImGs0XM";
 
         let config = Arc::new(Config {
+            sync_mode: SyncMode::Full,
             l1_rpc_url: rpc.to_string(),
             l2_rpc_url: l2_rpc.to_string(),
             chain: ChainConfig::optimism_goerli(),
@@ -140,7 +141,9 @@ mod tests {
             )
             .unwrap();
 
-        state.write().unwrap().update_l1_info(l1_info);
+        {
+            state.write().unwrap().update_l1_info(l1_info);
+        } // drop the lock
 
         if let Some(payload) = pipeline.next() {
             let hashes = get_tx_hashes(&payload.transactions.unwrap());

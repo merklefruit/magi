@@ -10,7 +10,7 @@ use tokio::time::sleep;
 use crate::{
     backend::{Database, HeadInfo},
     common::{BlockInfo, Epoch},
-    config::Config,
+    config::{Config, SyncMode},
     derive::{state::State, Pipeline},
     engine::{Engine, EngineApi},
     l1::{BlockUpdate, ChainWatcher},
@@ -45,7 +45,13 @@ pub struct Driver<E: Engine> {
 impl Driver<EngineApi> {
     pub fn from_config(config: Config, shutdown_recv: Receiver<bool>) -> Result<Self> {
         let db = Database::new(&config.data_dir, &config.chain.network);
-        let head = db.read_head();
+
+        let head = match config.sync_mode {
+            SyncMode::Full => db.read_head(),
+            SyncMode::Checkpoint(head_hash) => Some(head_hash.into()),
+            SyncMode::Fast => panic!("fast mode not implemented yet"),
+            SyncMode::Challenge => panic!("challenge mode not implemented yet"),
+        };
 
         let finalized_head = head
             .as_ref()

@@ -1,3 +1,4 @@
+use ethers::types::H256;
 use eyre::Result;
 use serde::{Deserialize, Serialize};
 
@@ -17,6 +18,15 @@ impl TryFrom<sled::IVec> for HeadInfo {
 
     fn try_from(bytes: sled::IVec) -> Result<Self> {
         Ok(serde_json::from_slice(bytes.as_ref())?)
+    }
+}
+
+impl From<H256> for HeadInfo {
+    fn from(bytes: H256) -> Self {
+        HeadInfo {
+            l2_block_info: BlockInfo::from(bytes),
+            ..Default::default()
+        }
     }
 }
 
