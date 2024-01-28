@@ -41,6 +41,8 @@ impl FromStr for SyncMode {
 pub struct Config {
     /// The base chain RPC URL
     pub l1_rpc_url: String,
+    /// The base chain beacon client RPC URL
+    pub l1_beacon_url: String,
     /// The L2 chain RPC URL
     pub l2_rpc_url: String,
     /// The L2 engine API URL
@@ -96,6 +98,8 @@ impl Config {
 pub struct CliConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub l1_rpc_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub l1_beacon_url: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub l2_rpc_url: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
