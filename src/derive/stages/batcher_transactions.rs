@@ -6,7 +6,7 @@ use std::collections::VecDeque;
 use crate::derive::PurgeableIterator;
 
 pub struct BatcherTransactionMessage {
-    pub txs: Vec<Vec<u8>>,
+    pub txs: Vec<bytes::Bytes>,
     pub l1_origin: u64,
 }
 
@@ -156,7 +156,7 @@ mod tests {
 
     #[test]
     fn test_push_tx() {
-        let data = hex::decode(TX_DATA).unwrap();
+        let data = bytes::Bytes::from(hex::decode(TX_DATA).unwrap());
         let txs = vec![data];
 
         let (tx, rx) = mpsc::channel();
