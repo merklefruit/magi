@@ -18,6 +18,9 @@ use self::{
 pub mod stages;
 pub mod state;
 
+pub mod ecotone_upgrade;
+pub use ecotone_upgrade::get_ecotone_upgrade_transactions;
+
 mod purgeable;
 pub use purgeable::PurgeableIterator;
 
