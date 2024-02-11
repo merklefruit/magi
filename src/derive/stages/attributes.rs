@@ -83,8 +83,6 @@ impl Attributes {
         let transactions = Some(self.derive_transactions(input, l1_info));
         let suggested_fee_recipient = SystemAccounts::default().fee_vault;
 
-        let parent_beacon_block_root = None; // TODO(nicolas)
-
         PayloadAttributes {
             timestamp,
             prev_randao,
@@ -96,7 +94,6 @@ impl Attributes {
             epoch,
             l1_inclusion_block,
             seq_number,
-            parent_beacon_block_root,
         }
     }
 
